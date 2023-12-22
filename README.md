@@ -4,7 +4,7 @@ Pinecone-based Personalized Lighting solution based on e different collected sen
 
 ## Including LWIP MQTT Libray in bouffalo.mk file
 
-by default the lwip-MQTT library is not included in bouffalo.mk, To do this move to "bl_iot_sdk\components\network\lwip" file open bouffalo.mk file and the line "src/apps/mqtt" at the end of line in "COMPONENT_SRCDIRS" Variable.
+by default, the lwip-MQTT library is not included in bouffalo.mk, To do this move to "bl_iot_sdk\components\network\lwip" file open bouffalo.mk file and the line "src/apps/mqtt" at the end of line in "COMPONENT_SRCDIRS" Variable.
 
 Before
 ```bash
