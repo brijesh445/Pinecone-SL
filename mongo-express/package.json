@@ -1,0 +1,36 @@
+{
+  "name": "mongo-express",
+  "version": "1.0.0",
+  "description": "Express application to make REST API calls to MongoDB",
+  "main": "dist/index",
+  "typings": "dist/index",
+  "type": "module",
+  "scripts": {
+    "build": "npx tsc",
+    "start": "npm run build && node --es-module-specifier-resolution=node dist/index.js",
+    "dev": "concurrently \"npx tsc --watch\" \"nodemon -q --es-module-specifier-resolution=node dist/index.js\""
+  },
+  "keywords": [],
+  "author": "Vatsalya Singhi",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-rate-limit": "^7.1.4",
+    "helmet": "^7.1.0",
+    "lodash": "^4.17.21",
+    "moment": "^2.29.4",
+    "mongodb": "^6.2.0",
+    "mongoose": "^8.0.0",
+    "rate-limiter-flexible": "^3.0.3"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.16",
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.8.10",
+    "concurrently": "^8.2.2",
+    "nodemon": "^3.0.1",
+    "typescript": "^5.2.2"
+  }
+}
