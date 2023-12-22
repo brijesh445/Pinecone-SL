@@ -12,8 +12,12 @@ export PROJECT_PATH PROJECT_BOARD
 
 -include ./proj_config.mk
 
-CFLAGS += -DLWIP_ALTCP_TLS
-CFLAGS += -DLWIP_ALTCP_TLS_MBEDTLS
+ifeq ($(origin BL60X_SDK_PATH), undefined)
+BL60X_SDK_PATH_GUESS ?= $(shell pwd)
+BL60X_SDK_PATH ?= $(BL60X_SDK_PATH_GUESS)/../..
+$(info ****** Please SET BL60X_SDK_PATH ******)
+$(info ****** Trying SDK PATH [$(BL60X_SDK_PATH)])
+endif
 
 ifeq ($(origin BL60X_SDK_PATH), undefined)
 $(error ****** Please set SDK paths ******)
