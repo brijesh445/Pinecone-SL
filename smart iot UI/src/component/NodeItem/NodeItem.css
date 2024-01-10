@@ -1,0 +1,25 @@
+.bg {
+    background-color: #ddd;
+}
+
+.App {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    align-content: center;
+    gap: 1vw;
+    flex-wrap: wrap;
+}
+
+.dataCard {
+    background-color: #efefef;
+    border-radius: 0.5em;
+    box-shadow: rgba(149, 157, 165, 0.2) 0px 8px 24px;
+    padding: 1em;
+}
+
+.revenueCard {
+    height: 20rem;
+    width: 100%;
+}

@@ -1,0 +1,94 @@
+.squares {
+  display: flex;
+  justify-content: center;
+}
+.icon1,
+.icon2 {
+  width: 360px;
+  height: 200px;
+  flex-shrink: 0;
+}
+
+.icon1 {
+  width: 360px;
+  height: 200px;
+  flex-shrink: 0;
+  border-style: ridge;
+}
+
+.icon2 {
+  border-style: ridge;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.Header {
+  display: flex;
+  width: 328px;
+  height: 32px;
+  flex-direction: column;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--light-dark, #263238);
+
+  /* 24 sp • H5 Headline */
+  font-family: Inter;
+  font-size: 24px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: normal;
+}
+
+.DeviceID {
+  width: 126px;
+  height: 24px;
+  flex-shrink: 0;
+  color: var(--light-dark, #263238);
+
+  /* 14 sp • Body 2 */
+  font-family: Inter;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 20px; /* 142.857% */
+  letter-spacing: 0.07px;
+}
+
+.Status {
+  width: 76px;
+  height: 24px;
+  flex-shrink: 0;
+  color: var(--light-dark, #263238);
+
+  /* 14 sp • Body 2 */
+  font-family: Inter;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 20px; /* 142.857% */
+  letter-spacing: 0.07px;
+}
+
+.ViewButton {
+  display: flex;
+  width: 96px;
+  height: 40px;
+  justify-content: center;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* YourComponent.css */
+.columns-container {
+  display: flex;
+  justify-content: space-around; /* Adjust this based on your layout needs */
+}
+
+.column {
+  flex: 1;
+  margin: 10px;
+  padding: 15px;
+  border: 1px solid #ccc;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}

@@ -13,7 +13,8 @@ import iot_dumps_router from "./routes/iot_dumps";
 
 // env and configurations
 dotenv.config();
-const allowedOrigins = []; // ['http://localhost:3000'];
+// const allowedOrigins = [];
+const allowedOrigins = ['http://localhost:3001', 'http://localhost:3000'];
 const port = process.env.PORT || 3000;
 // env and configurations
 
