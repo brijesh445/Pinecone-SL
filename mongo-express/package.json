@@ -23,7 +23,9 @@
     "moment": "^2.29.4",
     "mongodb": "^6.2.0",
     "mongoose": "^8.0.0",
-    "rate-limiter-flexible": "^3.0.3"
+    "mqtt": "^5.3.4",
+    "rate-limiter-flexible": "^3.0.3",
+    "socket.io": "^4.7.2"
   },
   "devDependencies": {
     "@types/cors": "^2.8.16",
