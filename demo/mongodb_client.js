@@ -12,6 +12,7 @@ const mongodb_collection_led_status = process.env.MONGODB_COLLECTION_LED_STATUS;
 const mongodb_collection_luminosity = process.env.MONGODB_COLLECTION_LUMINOSITY;
 const mongodb_collection_proximity = process.env.MONGODB_COLLECTION_PROXIMITY;
 const mongodb_collection_ldr = process.env.MONGODB_COLLECTION_LDR;
+const mongodb_collection_humidity = process.env.MONGODB_COLLECTION_HUMIDITY;
 
 
 const uri = `mongodb+srv://${mongodb_username}:${mongodb_password}@cluster0.gjddfqy.mongodb.net/?retryWrites=true&w=majority`;
@@ -111,6 +112,17 @@ async function save_ldr_time_series(docList) {
     save_time_series(payload, mongodb_collection_ldr);
 }
 
+async function save_humidity_time_series(docList) {
+    const payload = _.map(docList, (obj) => {
+        return {
+            "metadata": { "sensorName": obj.device_name, "place_id": obj.place_id, "type": "humidity" },
+            "timestamp": obj.date,
+            "humidity": obj.payload.humidity_sensor_reading,
+        }
+    });
+    save_time_series(payload, mongodb_collection_ldr);
+}
+
 
 async function processIOTFrames(docList) {
     // preprocessing
@@ -123,6 +135,7 @@ async function processIOTFrames(docList) {
     await save_luminosity_time_series(docList);
     await save_proximity_time_series(docList);
     await save_ldr_time_series(docList);
+    await save_humidity_time_series(docList);
 }
 
 module.exports = {
@@ -132,7 +145,14 @@ module.exports = {
 async function run() {
     const db = client.db(mongodb_database);
 
-    let collection_arr = [mongodb_collection_temperature, mongodb_collection_led_status, mongodb_collection_luminosity, mongodb_collection_proximity, mongodb_collection_ldr];
+    let collection_arr = [
+        // mongodb_collection_temperature,
+        // mongodb_collection_led_status,
+        // mongodb_collection_luminosity,
+        // mongodb_collection_proximity,
+        // mongodb_collection_ldr,
+        mongodb_collection_humidity,
+    ];
 
     for (let value of collection_arr) {
         const result = await db.createCollection(value, {
@@ -140,7 +160,6 @@ async function run() {
                 timeField: "timestamp",
                 metaField: "metadata",
                 granularity: "seconds",
-                // expireAfterSeconds: "86400", // 1 day
             }
         });
         console.log(`${value} collections created`);
