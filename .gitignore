@@ -20,11 +20,8 @@ npm-debug.log*
 dist
 node_modules
 build
-public
 
 /.build
-/.public
-/public
 /build
 /.idea
 /.ionic
