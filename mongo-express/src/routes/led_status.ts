@@ -95,7 +95,8 @@ router.get("/aggregate_by_sensor", async (req, res) => {
 router.get("/aggregate_by_place", async (req, res) => {
     const minutes = req?.query?.minutes ? Number(req.query.minutes) : 10;
     const sensorName = req?.query?.device_name ?? null;
-    const match_aggregator = sensorName ? { $match: { 'metadata.sensorName': sensorName } } : { $match: { "metadata.sensorName": { "$exists": true } } };
+    // const match_aggregator = sensorName ? { $match: { 'metadata.sensorName': sensorName } } : { $match: { "metadata.sensorName": { "$exists": true } } };
+    const match_aggregator = sensorName ? { $match: { 'metadata.place_id': sensorName } } : { $match: { "metadata.place_id": { "$exists": true } } };
 
     const interval = minutes * 60 * 1000;
 

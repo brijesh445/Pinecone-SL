@@ -3,7 +3,7 @@ import { conn, db } from '../db_conn';
 import dotenv from 'dotenv';
 dotenv.config();
 
-const collection = process.env.MONGODB_COLLECTION_TEMPERATURE;
+const collection = process.env.MONGODB_COLLECTION_HUMIDITY;
 
 const router = express.Router();
 
@@ -34,7 +34,7 @@ router.get("/aggregate_by_sensor", async (req, res) => {
         {
             $project: {
                 timestamp: 1,
-                temperature: 1,
+                humidity: 1,
                 metadata: 1
             }
         },
@@ -52,9 +52,9 @@ router.get("/aggregate_by_sensor", async (req, res) => {
                     },
                     name: '$metadata.sensorName'
                 },
-                average_temperature: { $avg: '$temperature' },
-                min_temperature: { $min: '$temperature' },
-                max_temperature: { $max: '$temperature' },
+                average_humidity: { $avg: '$humidity' },
+                min_humidity: { $min: '$humidity' },
+                max_humidity: { $max: '$humidity' },
                 count: { $sum: 1 }, // Count of readings
             }
         },
@@ -66,7 +66,7 @@ router.get("/aggregate_by_sensor", async (req, res) => {
         },
         {
             $addFields: {
-                average_temperature: { $round: ['$average_temperature', 2] } // Round to 2 decimal places
+                average_humidity: { $round: ['$average_humidity', 2] } // Round to 2 decimal places
             }
         },
         {
@@ -75,9 +75,9 @@ router.get("/aggregate_by_sensor", async (req, res) => {
                 data: {
                     $push: {
                         date: '$_id.date',
-                        average_temperature: '$average_temperature',
-                        min_temperature: '$min_temperature',
-                        max_temperature: '$max_temperature',
+                        average_humidity: '$average_humidity',
+                        min_humidity: '$min_humidity',
+                        max_humidity: '$max_humidity',
                         count: '$count' // Include count of readings
                     }
                 }
@@ -113,7 +113,7 @@ router.get("/aggregate_by_place", async (req, res) => {
         {
             $project: {
                 timestamp: 1,
-                temperature: 1,
+                humidity: 1,
                 metadata: 1
             }
         },
@@ -131,9 +131,9 @@ router.get("/aggregate_by_place", async (req, res) => {
                     },
                     name: '$metadata.place_id'
                 },
-                average_temperature: { $avg: '$temperature' },
-                min_temperature: { $min: '$temperature' },
-                max_temperature: { $max: '$temperature' },
+                average_humidity: { $avg: '$humidity' },
+                min_humidity: { $min: '$humidity' },
+                max_humidity: { $max: '$humidity' },
                 count: { $sum: 1 }, // Count of readings
             }
         },
@@ -145,7 +145,7 @@ router.get("/aggregate_by_place", async (req, res) => {
         },
         {
             $addFields: {
-                average_temperature: { $round: ['$average_temperature', 2] } // Round to 2 decimal places
+                average_humidity: { $round: ['$average_humidity', 2] } // Round to 2 decimal places
             }
         },
         {
@@ -154,9 +154,9 @@ router.get("/aggregate_by_place", async (req, res) => {
                 data: {
                     $push: {
                         date: '$_id.date',
-                        average_temperature: '$average_temperature',
-                        min_temperature: '$min_temperature',
-                        max_temperature: '$max_temperature',
+                        average_humidity: '$average_humidity',
+                        min_humidity: '$min_humidity',
+                        max_humidity: '$max_humidity',
                         count: '$count' // Include count of readings
                     }
                 }

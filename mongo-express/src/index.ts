@@ -5,6 +5,7 @@ import helmet from 'helmet';
 import { rateLimit } from 'express-rate-limit';
 
 import temp_router from "./routes/temperature";
+import humidity_router from "./routes/humidity";
 import proximity_router from "./routes/proximity";
 import luminosity_router from "./routes/luminosity";
 import ldr_router from "./routes/ldr";
@@ -40,6 +41,7 @@ app.use(cors({ origin: allowedOrigins }));
 // router paths
 app.use("/iot_dumps", iot_dumps_router);
 app.use("/temperature", temp_router);
+app.use("/humidity", humidity_router);
 app.use("/proximity", proximity_router);
 app.use("/luminosity", luminosity_router);
 app.use("/ldr", ldr_router);

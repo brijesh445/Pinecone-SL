@@ -21,7 +21,7 @@ import PopupState, { bindTrigger, bindMenu } from 'material-ui-popup-state';
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 import { Chart as ChartJS, defaults } from "chart.js/auto";
-import { Line } from "react-chartjs-2";
+import { Line, Scatter } from "react-chartjs-2";
 
 import MQTT from 'mqtt';
 import axios from "axios";
@@ -131,6 +131,7 @@ function NodeItem() {
     const [topic, setTopic] = useState("");
     const [isConnected, setIsConnected] = useState(false);
     const [liveSensorReading, setLiveSensorReading] = useState({ "brightness": "30", "temperature": "30", "humidity": "30", "pressure": "1.5" });
+    const [heatIndexData, setHeatIndexData] = useState({ value: "30", text: "No suspected precautions necessary.", colorCode: "#fff" });
 
     // chart filters
     const [field, setField] = useState("");
@@ -143,12 +144,16 @@ function NodeItem() {
     const [chartTitle, setChartTitle] = useState("Chart Title");
     // chart data
 
+    // heat index chart
+    const [heatIndexDatasets, setHeatIndexDatasets] = useState([]);
+    // heat index chart
+
 
     // MQTT CODE
-    // const wsURL = 'mqtt://test.mosquitto.org:1883';
-    // const wsURL = 'ws://test.mosquitto.org:8080';
     const wsURL = process.env.REACT_APP_MQTT_OVER_WEBSOCKET_URL || "ws://broker.emqx.io:8083/mqtt";
     const serverURL = process.env.REACT_APP_SERVER_URL || "http://localhost:3000";
+
+    const liveReadingsTopic = process.env.REACT_APP_LIVE_READING || "live-readings";
 
     const options = {
         keepalive: 60,
@@ -168,56 +173,59 @@ function NodeItem() {
         // username: 'check_admin',
         // password: 'check_admin',
     };
+    // const client = null;
     const client = MQTT.connect(wsURL, options);
     useEffect(() => {
         // MQTT CODE
         // Subscribe to topics
-        client.on('connect', () => {
-            setIsConnected(true);
-            console.log('Connected to MQTT broker');
-            client.subscribe(topic, (err) => {
-                if (!err) {
-                    console.log('Subscribed to topic:', topic);
+        if (client) {
+            client.on('connect', () => {
+                setIsConnected(true);
+                console.log('Connected to MQTT broker');
+
+                client.subscribe(topic, (err) => {
+                    if (!err) {
+                        console.log('Subscribed to topic:', topic);
+                    }
+                });
+
+                client.subscribe(liveReadingsTopic, (err) => {
+                    if (!err) {
+                        console.log('Subscribed to topic: live-readings');
+                    }
+                });
+            });
+            // error message
+            client.on('error', (error) => {
+                console.error('MQTT connection error:', error);
+            });
+            client.on('reconnect', () => {
+                console.log("reconnecting");
+                setIsConnected(true);
+            });
+            client.on('offline', () => {
+                console.log("client goes offline");
+            });
+            // close message
+            client.on('close', () => {
+                console.log('Connection closed');
+            });
+            // Handle incoming messages
+            client.on('message', (topic, payload) => {
+                console.log(`Received message on topic ${topic}: ${payload.toString()}`);
+                if (topic === liveReadingsTopic) {
+                    console.log("payload=>", JSON.parse(payload.toString()));
+                    setLiveSensorReading(JSON.parse(payload.toString()));
                 }
             });
-
-            client.subscribe("live-readings", (err) => {
-                if (!err) {
-                    console.log('Subscribed to topic: live-readings');
-                }
-            });
-        });
-        // error message
-        client.on('error', (error) => {
-            console.error('MQTT connection error:', error);
-        });
-        client.on('reconnect', () => {
-            console.log("reconnecting");
-            setIsConnected(true);
-        });
-        client.on('offline', () => {
-            console.log("client goes offline");
-        });
-        // close message
-        client.on('close', () => {
-            console.log('Connection closed');
-        });
-        // Handle incoming messages
-        client.on('message', (topic, payload) => {
-            console.log(`Received message on topic ${topic}: ${payload.toString()}`);
-
-            if (topic === "live-readings") {
-                console.log("payload=>", JSON.parse(payload.toString()));
-                setLiveSensorReading(JSON.parse(payload.toString()));
-            }
-        });
-        return () => {
-            // Unsubscribe and disconnect on component unmount
-            client.end(() => {
-                console.log('MQTT Disconnected');
-                setIsConnected(false);
-            });
-        };
+            return () => {
+                // Unsubscribe and disconnect on component unmount
+                client.end(() => {
+                    console.log('MQTT Disconnected');
+                    setIsConnected(false);
+                });
+            };
+        }
     }, [topic]);
 
     // MQTT PUB CODE
@@ -233,6 +241,56 @@ function NodeItem() {
     // MQTT PUB CODE
     // MQTT CODE
 
+    // HEAT INDEX CODE
+    const calculateHeatIndex = (temperatureCelsius, humidity) => {
+        temperatureCelsius = Number(temperatureCelsius);
+        humidity = Number(humidity);
+        // Convert Celsius to Fahrenheit
+        var temperatureFahrenheit = (temperatureCelsius * 9 / 5) + 32;
+
+        // Ensure the temperature is in Fahrenheit
+        if (temperatureFahrenheit < 80 || humidity < 40) {
+            return Number(temperatureCelsius); // Use the actual temperature if conditions are not met
+        }
+
+        // Calculate the heat index in Fahrenheit
+        var heatIndexFahrenheit = -42.379 +
+            2.04901523 * temperatureFahrenheit +
+            10.14333127 * humidity -
+            0.22475541 * temperatureFahrenheit * humidity -
+            6.83783e-03 * temperatureFahrenheit * temperatureFahrenheit -
+            5.481717e-02 * humidity * humidity +
+            1.22874e-03 * temperatureFahrenheit * temperatureFahrenheit * humidity +
+            8.5282e-04 * temperatureFahrenheit * humidity * humidity -
+            1.99e-06 * temperatureFahrenheit * temperatureFahrenheit * humidity * humidity;
+
+        // Convert the Heat Index back to Celsius
+        var heatIndexCelsius = (heatIndexFahrenheit - 32) * 5 / 9;
+        return Number(heatIndexCelsius);
+    }
+    useEffect(() => {
+        const value = calculateHeatIndex(liveSensorReading['temperature'], liveSensorReading['humidity']);
+        var text = "No suspected precautions necessary.";
+        var colorCode = "#fff";
+        if (value > 54) {
+            text = "Extreme danger: heat stroke is imminent";
+            colorCode = "#ff0000";
+        } else if (54 > value && value > 41) {
+            text = "Danger: heat cramps and heat exhaustion are likely; heat stroke is probable with continued activity.";
+            colorCode = "#ff8c00";
+        } else if (41 > value && value > 32) {
+            text = "Extreme caution: heat cramps and heat exhaustion are possible. Continuing activity could result in heat stroke.";
+            colorCode = "#ffd700";
+        } else if (32 > value && value > 27) {
+            text = "Caution: fatigue is possible with prolonged exposure and activity. Continuing activity could result in heat cramps.";
+            colorCode = "#ffff66";
+        } else {
+            text = "No suspected precautions necessary.";
+            colorCode = "#fff";
+        }
+        setHeatIndexData({ value: value, text: text, colorCode: colorCode });
+    }, [liveSensorReading]);
+    // HEAT INDEX CODE
 
     const fetchColorCode = (value) => {
         switch (value) {
@@ -245,6 +303,15 @@ function NodeItem() {
                 return "#3a155a";
             case "max_temperature":
                 return "#695353";
+            // HUMIDITY
+            case "humidity":
+                return "#892d2d";
+            case "average_humidity":
+                return "#342374";
+            case "min_humidity":
+                return "#3a345a";
+            case "max_humidity":
+                return "#693053";
             //  PROXIMITY
             case "proximity":
                 return "#13a1ba";
@@ -304,11 +371,22 @@ function NodeItem() {
             });
             setLabels(labels.reverse()); // reverse is to make data chronological
             setDatasets(dataset.reverse()); // reverse is to make data chronological
+
+            // TEMPERATURE HEAT INDEX CHART
+            if (field === "iot_dumps") {
+                let dataset = [];
+                data.forEach((obj) => {
+                    dataset.push({
+                        x: obj['average_temperature'],
+                        y: calculateHeatIndex(obj['average_temperature'], obj['average_humidity'] || 0),
+                    })
+                });
+                setHeatIndexDatasets(dataset);
+            }
         } catch (err) {
             console.log(err);
         }
     }
-
 
     // CHART CODE
     useEffect(() => {
@@ -318,6 +396,9 @@ function NodeItem() {
         }
         if (field === "temperature") {
             setChartTitle("Temperature sensor reading");
+        }
+        if (field === "humidity") {
+            setChartTitle("Humidity sensor reading");
         }
         if (field === "proximity") {
             setChartTitle("Proximity sensor reading");
@@ -381,17 +462,13 @@ function NodeItem() {
             {/* ROW 1 */}
             <Box
                 variant="div"
-                style={{
-                    width: "100%",
-                    gap: "10%",
-                    marginInline: "auto",
-                }}
                 sx={{
                     display: 'flex',
                     flexWrap: 'wrap',
                     flexDirection: 'row',
                     alignItems: 'center',
-                    marginBottom: 0.5,
+                    justifyContent: "space-evenly",
+                    margin: 0.5,
                     borderRadius: 1,
                 }}
             >
@@ -594,10 +671,45 @@ function NodeItem() {
                     </Box>
 
                 </Item>
+
+                {/* HEAT INDEX */}
+                <Item
+                    sx={{
+                        minHeight: "200px",
+                        paddingInline: 5,
+                        backgroundColor: heatIndexData['colorCode'],
+                        backdropFilter: "blur(10px)",
+                    }}>
+
+                    <div style={{ ...currentStatusTextStyle }}>
+                        Heat Index
+                    </div>
+
+                    <Box
+                        sx={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            justifyContent: 'center',
+                            alignContent: 'center',
+                            alignItems: 'center',
+                            flexWrap: 'wrap',
+                            p: 1,
+                            m: 1,
+                            borderRadius: 1,
+                            width: "100%",
+                            height: "100%",
+                            minHeight: "200px",
+                        }}>
+                        <div style={{ fontSize: "35px", cursor: "pointer" }} title={heatIndexData['text']}>
+                            {heatIndexData['value'] + " °C"}
+                        </div>
+                    </Box>
+
+                </Item>
             </Box>
 
             {/* ROW 2 */}
-            <Box>
+            <Box sx={{ margin: 0.5 }} >
 
                 {/* DROPDOWN */}
                 <div
@@ -629,6 +741,7 @@ function NodeItem() {
                                 <MenuItem value={"proximity"}>Proximity</MenuItem>
                                 <MenuItem value={"luminosity"}>Luminosity</MenuItem>
                                 <MenuItem value={"ldr"}>LDR</MenuItem>
+                                <MenuItem value={"humidity"}>Humidity</MenuItem>
                             </Select>
                         </FormControl>
                     </Box>
@@ -682,6 +795,58 @@ function NodeItem() {
 
             </Box>
 
+            {/* ROW 3 */}
+            <Box sx={{ margin: 0.5, marginBlock: 1 }}>
+                {/* HEAT INDEX CHART */}
+                <div className="dataCard revenueCard">
+
+                    <Scatter
+                        data={{
+                            datasets: [
+                                {
+                                    label: 'Heat Index [°C]',
+                                    data: heatIndexDatasets,
+                                    backgroundColor: 'rgba(255, 99, 132, 1)',
+                                },
+                            ],
+                        }}
+
+                        options={{
+                            elements: {
+                                line: {
+                                    tension: 0.5,
+                                },
+                            },
+                            plugins: {
+                                title: {
+                                    text: "Heat index based on temperature and relative humidity",
+                                },
+                            },
+                            scales: {
+                                x: {
+                                    beginAtZero: true,
+                                    title: {
+                                        display: true,
+                                        text: "T [°C]"
+                                    },
+                                    grid: {
+                                        display: true
+                                    }
+                                },
+                                y: {
+                                    beginAtZero: true,
+                                    title: {
+                                        display: true,
+                                        text: "Heat Index"
+                                    },
+                                    grid: {
+                                        display: true
+                                    }
+                                }
+                            },
+                        }} />
+                </div>
+            </Box>
         </div>
     );
 }
