@@ -77,23 +77,27 @@ router.get("/aggregate_by_sensor", async (req, res) => {
                     device_name: '$device_name',
                 },
                 // temperature
-                average_temperature: { $avg: '$payload.temperature_sensor_reading' },
-                min_temperature: { $min: '$payload.temperature_sensor_reading' },
-                max_temperature: { $max: '$payload.temperature_sensor_reading' },
-                // proximity
-                average_proximity: { $avg: '$payload.proximity_sensor_reading' },
-                min_proximity: { $min: '$payload.proximity_sensor_reading' },
-                max_proximity: { $max: '$payload.proximity_sensor_reading' },
-                // luminosity
-                average_luminosity: { $avg: '$payload.luminosity_reading' },
-                min_luminosity: { $min: '$payload.luminosity_reading' },
-                max_luminosity: { $max: '$payload.luminosity_reading' },
+                average_temperature: { $avg: '$payload.temperature' },
+                min_temperature: { $min: '$payload.temperature' },
+                max_temperature: { $max: '$payload.temperature' },
+                // humidity
+                average_humidity: { $avg: '$payload.humidity' },
+                min_humidity: { $min: '$payload.humidity' },
+                max_humidity: { $max: '$payload.humidity' },
                 // led_status
-                current_led_status: { $last: '$payload.led_status_reading' },
+                current_led_status: { $last: '$payload.led_status' },
+                // luminosity
+                average_luminosity: { $avg: '$payload.luminosity' },
+                min_luminosity: { $min: '$payload.luminosity' },
+                max_luminosity: { $max: '$payload.luminosity' },
+                // proximity
+                average_proximity: { $avg: '$payload.proximity' },
+                min_proximity: { $min: '$payload.proximity' },
+                max_proximity: { $max: '$payload.proximity' },
                 // ldr
-                average_ldr: { $avg: '$payload.light_sensor_reading' },
-                min_ldr: { $min: '$payload.light_sensor_reading' },
-                max_ldr: { $max: '$payload.light_sensor_reading' },
+                // average_ldr: { $avg: '$payload.light_sensor_reading' },
+                // min_ldr: { $min: '$payload.light_sensor_reading' },
+                // max_ldr: { $max: '$payload.light_sensor_reading' },
                 // count
                 count: { $sum: 1 }, // Count of readings
             }
@@ -107,9 +111,10 @@ router.get("/aggregate_by_sensor", async (req, res) => {
         {
             $addFields: {
                 average_temperature: { $round: ['$average_temperature', 2] }, // Round to 2 decimal places
+                average_humidity: { $round: ['$average_humidity', 2] }, // Round to 2 decimal places
                 average_proximity: { $round: ['$average_proximity', 2] }, // Round to 2 decimal places
                 average_luminosity: { $round: ['$average_luminosity', 2] }, // Round to 2 decimal places
-                average_ldr: { $round: ['$average_ldr', 2] }, // Round to 2 decimal places
+                // average_ldr: { $round: ['$average_ldr', 2] }, // Round to 2 decimal places
             }
         },
         {
@@ -122,6 +127,10 @@ router.get("/aggregate_by_sensor", async (req, res) => {
                         average_temperature: '$average_temperature',
                         min_temperature: '$min_temperature',
                         max_temperature: '$max_temperature',
+                        // humidity
+                        average_humidity: '$average_humidity',
+                        min_humidity: '$min_humidity',
+                        max_humidity: '$max_humidity',
                         // proximity
                         average_proximity: '$average_proximity',
                         min_proximity: '$min_proximity',
@@ -133,9 +142,9 @@ router.get("/aggregate_by_sensor", async (req, res) => {
                         // led_status
                         current_led_status: '$current_led_status',
                         // ldr
-                        average_ldr: '$average_ldr',
-                        min_ldr: '$min_ldr',
-                        max_ldr: '$max_ldr',
+                        // average_ldr: '$average_ldr',
+                        // min_ldr: '$min_ldr',
+                        // max_ldr: '$max_ldr',
                         // count
                         count: '$count' // Include count of readings
                     }
