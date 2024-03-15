@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from "react";
 
@@ -130,7 +131,23 @@ function NodeItem() {
     const [header, setHeader] = useState("");
     const [topic, setTopic] = useState("");
     const [isConnected, setIsConnected] = useState(false);
-    const [liveSensorReading, setLiveSensorReading] = useState({ "brightness": "30", "temperature": "30", "humidity": "30", "pressure": "1.5" });
+    const [liveSensorReading, setLiveSensorReading] = useState(
+        {
+            "device_id": "device_id",
+            "device_name": `iot_sensor_123`,
+            "place_id": `default place`,
+            "date": `2023-11-06T19:47:42.440Z`,
+            "timestamp": `1234567890`,
+            "payload": {
+                "temperature": 30, // Temperature -10 to +50
+                "humidity": 50, // Humidity :- 0 to 100%
+                "led_status": false, // Led Status :- true or false
+                "luminosity": 0.001, // Luminiostiy :- 0.001 to 65000
+                "proximity": false, // Proximity :- true or false
+            }
+        }
+    );
+
     const [heatIndexData, setHeatIndexData] = useState({ value: "30", text: "No suspected precautions necessary.", colorCode: "#fff" });
 
     // chart filters
@@ -150,11 +167,9 @@ function NodeItem() {
 
 
     // MQTT CODE
-    const wsURL = process.env.REACT_APP_MQTT_OVER_WEBSOCKET_URL || "ws://broker.emqx.io:8083/mqtt";
-    const serverURL = process.env.REACT_APP_SERVER_URL || "http://localhost:3000";
-
-    const liveReadingsTopic = process.env.REACT_APP_LIVE_READING || "live-readings";
-
+    const serverURL = process.env.REACT_APP_SERVER_URL; // local express server
+    const wsURL = process.env.REACT_APP_MQTT_OVER_WEBSOCKET_URL;
+    const liveReadingsTopic = process.env.REACT_APP_LIVE_READING;
     const options = {
         keepalive: 60,
         clientId: 'mqttjs_' + Math.random().toString(16).substr(2, 8),
@@ -164,16 +179,16 @@ function NodeItem() {
         reconnectPeriod: 1000,
         connectTimeout: 30 * 1000,
         will: {
-            topic: 'WillMsg',
+            topic: liveReadingsTopic,
             payload: 'Connection Closed abnormally..!',
             qos: 0,
             retain: false
         },
-        // rejectUnauthorized: false,
+        rejectUnauthorized: false,
         // username: 'check_admin',
         // password: 'check_admin',
     };
-    // const client = null;
+
     const client = MQTT.connect(wsURL, options);
     useEffect(() => {
         // MQTT CODE
@@ -214,8 +229,12 @@ function NodeItem() {
             client.on('message', (topic, payload) => {
                 console.log(`Received message on topic ${topic}: ${payload.toString()}`);
                 if (topic === liveReadingsTopic) {
-                    console.log("payload=>", JSON.parse(payload.toString()));
-                    setLiveSensorReading(JSON.parse(payload.toString()));
+                    try {
+                        let object = JSON.parse(payload.toString());
+                        setLiveSensorReading(object);
+                    } catch (err) {
+                        console.log("err json parse =>", payload.toString());
+                    }
                 }
             });
             return () => {
@@ -266,10 +285,13 @@ function NodeItem() {
 
         // Convert the Heat Index back to Celsius
         var heatIndexCelsius = (heatIndexFahrenheit - 32) * 5 / 9;
-        return Number(heatIndexCelsius);
+        return Math.floor(Number(heatIndexCelsius));
     }
     useEffect(() => {
-        const value = calculateHeatIndex(liveSensorReading['temperature'], liveSensorReading['humidity']);
+        const temperature = liveSensorReading?.payload?.temperature || 30;
+        const humidity = liveSensorReading?.payload?.humidity || 50;
+
+        const value = calculateHeatIndex(temperature, humidity);
         var text = "No suspected precautions necessary.";
         var colorCode = "#fff";
         if (value > 54) {
@@ -423,7 +445,7 @@ function NodeItem() {
         setType(type);
         setFilter(filter);
         setHeader(`Details for ${filter}`);
-        setTopic(`${type}/${filter}`);
+        setTopic(process.env.REACT_APP_PUBLISH_LED_STATUS);
     }, [navigate, searchParams]);
     // QUERY PARAMS CODE
 
@@ -513,12 +535,12 @@ function NodeItem() {
                         <TungstenIconStyled data-testid="Tungsten" />
                         <Box sx={{ width: 300 }}>
                             <Slider
-                                key={`slider0-${liveSensorReading['brightness'] || " "}`}
-                                value={Number(liveSensorReading['brightness']) || 50}
+                                key={`slider0-luminosity}`}
+                                value={Number(liveSensorReading?.payload?.luminosity) || 50}
                                 aria-label="Default"
                                 valueLabelDisplay="auto"
-                                min={0}
-                                max={100}
+                                min={0.001}
+                                max={65000}
                             />
                         </Box>
                     </div>
@@ -547,29 +569,31 @@ function NodeItem() {
                             marginBottom: "40px",
                         }}>
 
+                        {/* TEMPERATURE */}
                         <Grid item style={{ height: "150px", marginInline: "20px" }}>
                             <div style={{ height: "150px" }}>
                                 <Slider
-                                    key={`slider1-${liveSensorReading['temperature'] || " "}`}
+                                    key={`slider1-temperature`}
                                     aria-label="Temperature"
                                     orientation="vertical"
                                     valueLabelDisplay="auto"
-                                    value={Number(liveSensorReading['temperature']) || 30}
+                                    value={Number(liveSensorReading?.payload?.temperature) || 30}
                                     valueLabelFormat={(value) => `Temperature: ${value} °C`}
-                                    min={-50}
+                                    min={-10}
                                     max={50}
                                 />
                                 <p style={{ textAlign: "center" }}>Temperature</p>
                             </div>
                         </Grid>
+                        {/* HUMIDITY */}
                         <Grid item style={{ height: "150px", marginInline: "20px" }}>
                             <div style={{ height: "150px" }}>
                                 <Slider
-                                    key={`slider2-${liveSensorReading['humidity'] || " "}`}
+                                    key={`slider2-humidity`}
                                     aria-label="Humidity"
                                     orientation="vertical"
                                     valueLabelDisplay="auto"
-                                    value={Number(liveSensorReading['humidity']) || 30}
+                                    value={Number(liveSensorReading?.payload?.humidity) || 50}
                                     valueLabelFormat={(value) => `Humidity ${value} %`}
                                     min={0}
                                     max={100}
@@ -577,22 +601,23 @@ function NodeItem() {
                                 <p style={{ textAlign: "center" }}>Humidity</p>
                             </div>
                         </Grid>
+                        {/* PROXIMITY */}
                         <Grid item style={{ height: "150px", marginInline: "20px" }}>
                             <div style={{ height: "150px" }}>
                                 <Slider
-                                    key={`slider3-${liveSensorReading['pressure'] || " "}`}
-                                    getAriaLabel={() => "Pressure (hpa)"}
+                                    key={`slider3-proximity`}
+                                    getAriaLabel={() => "Proximity"}
                                     orientation="vertical"
                                     valueLabelDisplay="auto"
-                                    value={Number(liveSensorReading['pressure']) || 1.5}
-                                    valueLabelFormat={(value) => `Pressure: ${value}`}
-                                    min={0.0}
-                                    max={5.0}
-                                    step={0.1}
+                                    value={!!(liveSensorReading?.payload?.proximity) ? 1 : 0}
+                                    valueLabelFormat={(value) => `Proximity: ${value}`}
+                                    min={0}
+                                    max={1}
                                 />
-                                <p style={{ textAlign: "center" }}>Pressure (hpa)</p>
+                                <p style={{ textAlign: "center" }}>Proximity</p>
                             </div>
                         </Grid>
+
 
                     </Box>
                 </Item>
@@ -738,10 +763,10 @@ function NodeItem() {
                             >
                                 <MenuItem value={"iot_dumps"}>Show All</MenuItem>
                                 <MenuItem value={"temperature"}>Temperature</MenuItem>
-                                <MenuItem value={"proximity"}>Proximity</MenuItem>
-                                <MenuItem value={"luminosity"}>Luminosity</MenuItem>
-                                <MenuItem value={"ldr"}>LDR</MenuItem>
                                 <MenuItem value={"humidity"}>Humidity</MenuItem>
+                                <MenuItem value={"luminosity"}>Luminosity</MenuItem>
+                                <MenuItem value={"proximity"}>Proximity</MenuItem>
+                                {/* <MenuItem value={"ldr"}>LDR</MenuItem> */}
                             </Select>
                         </FormControl>
                     </Box>

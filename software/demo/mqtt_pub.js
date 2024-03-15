@@ -26,20 +26,22 @@ const fetch_payload = () => {
     const device_id = getRandomNumber(1, 4, true);
     const placeList = ["Kitchen", "Living Room", "Bed Room"];
     const date = new Date();
-    return {
+    let dummy_payload =  {
         "device_id": device_id,
         "device_name": `iot_sensor_${device_id}`,
         "place_id": placeList[device_id - 1],
         "date": date.toISOString(), // 2023-11-06T19:47:42.440Z
         "timestamp": date.getTime(), // number in ns
         "payload": {
-            "temperature_sensor_reading": getRandomNumber(-10, 30, true),
-            "led_status_reading": getRandomNumber(-10, 10, true) > 0 ? true : false,
-            "luminosity_reading": Number(getRandomNumber(0, 1, false).toFixed(2)),
-            "proximity_sensor_reading": getRandomNumber(25, 2000, true),
-            "light_sensor_reading": getRandomNumber(0, 1023, true),
+            "temperature": getRandomNumber(-11, 15, true),
+            "humidity": getRandomNumber(55, 90, true),
+            "led_status": getRandomNumber(-100, 100, true) > 0 ? true : false,
+            "luminosity": Number(getRandomNumber(0.001, 65000, false).toFixed(2)),
+            "proximity": getRandomNumber(-100, 100, true) > 0 ? true : false,
         }
-    }
+    };
+    console.log(dummy_payload.payload);
+    return dummy_payload;
 }
 
 // Function to publish data

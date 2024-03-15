@@ -53,6 +53,7 @@ async function init() {
                 await processIOTFrames(docList);
             } catch (err) {
                 console.log('parse error', err);
+                console.log("check batch=>", batch.messages);
             }
             await heartbeat();
         },

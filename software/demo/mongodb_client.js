@@ -6,16 +6,18 @@ var _ = require('lodash');
 const mongodb_username = process.env.MONGODB_USERNAME;
 const mongodb_password = process.env.MONGODB_PASSWORD;
 const mongodb_database = process.env.MONGODB_DATABASE;
+
 const mongodb_collection_iot_frames = process.env.MONGODB_COLLECTION_IOT_FRAMES;
 const mongodb_collection_temperature = process.env.MONGODB_COLLECTION_TEMPERATURE;
+const mongodb_collection_humidity = process.env.MONGODB_COLLECTION_HUMIDITY;
 const mongodb_collection_led_status = process.env.MONGODB_COLLECTION_LED_STATUS;
 const mongodb_collection_luminosity = process.env.MONGODB_COLLECTION_LUMINOSITY;
 const mongodb_collection_proximity = process.env.MONGODB_COLLECTION_PROXIMITY;
-const mongodb_collection_ldr = process.env.MONGODB_COLLECTION_LDR;
-const mongodb_collection_humidity = process.env.MONGODB_COLLECTION_HUMIDITY;
+// const mongodb_collection_ldr = process.env.MONGODB_COLLECTION_LDR;
 
 
-const uri = `mongodb+srv://${mongodb_username}:${mongodb_password}@cluster0.gjddfqy.mongodb.net/?retryWrites=true&w=majority`;
+// const uri = `mongodb+srv://${mongodb_username}:${mongodb_password}@cluster0.gjddfqy.mongodb.net/?retryWrites=true&w=majority`;
+const uri = 'mongodb://127.0.0.1:27017'; // Assuming MongoDB is running on the default port
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
@@ -62,10 +64,21 @@ async function save_temperature_time_series(docList) {
         return {
             "metadata": { "sensorName": obj.device_name, "place_id": obj.place_id, "type": "temperature" },
             "timestamp": obj.date,
-            "temperature": obj.payload.temperature_sensor_reading,
+            "temperature": obj.payload.temperature,
         }
     });
     save_time_series(payload, mongodb_collection_temperature);
+}
+
+async function save_humidity_time_series(docList) {
+    const payload = _.map(docList, (obj) => {
+        return {
+            "metadata": { "sensorName": obj.device_name, "place_id": obj.place_id, "type": "humidity" },
+            "timestamp": obj.date,
+            "humidity": obj.payload.humidity,
+        }
+    });
+    save_time_series(payload, mongodb_collection_humidity);
 }
 
 async function save_led_status_time_series(docList) {
@@ -73,7 +86,7 @@ async function save_led_status_time_series(docList) {
         return {
             "metadata": { "sensorName": obj.device_name, "place_id": obj.place_id, "type": "led_status" },
             "timestamp": obj.date,
-            "led_status": obj.payload.led_status_reading,
+            "led_status": !!(obj.payload.led_status),
         }
     });
     save_time_series(payload, mongodb_collection_led_status);
@@ -84,7 +97,7 @@ async function save_luminosity_time_series(docList) {
         return {
             "metadata": { "sensorName": obj.device_name, "place_id": obj.place_id, "type": "luminosity" },
             "timestamp": obj.date,
-            "luminosity": obj.payload.luminosity_reading,
+            "luminosity": obj.payload.luminosity,
         }
     });
     save_time_series(payload, mongodb_collection_luminosity);
@@ -95,33 +108,24 @@ async function save_proximity_time_series(docList) {
         return {
             "metadata": { "sensorName": obj.device_name, "place_id": obj.place_id, "type": "proximity" },
             "timestamp": obj.date,
-            "proximity": obj.payload.proximity_sensor_reading,
+            "proximity": !!(obj.payload.proximity),
         }
     });
     save_time_series(payload, mongodb_collection_proximity);
 }
 
-async function save_ldr_time_series(docList) {
-    const payload = _.map(docList, (obj) => {
-        return {
-            "metadata": { "sensorName": obj.device_name, "place_id": obj.place_id, "type": "ldr" },
-            "timestamp": obj.date,
-            "ldr": obj.payload.light_sensor_reading,
-        }
-    });
-    save_time_series(payload, mongodb_collection_ldr);
-}
+// async function save_ldr_time_series(docList) {
+//     const payload = _.map(docList, (obj) => {
+//         return {
+//             "metadata": { "sensorName": obj.device_name, "place_id": obj.place_id, "type": "ldr" },
+//             "timestamp": obj.date,
+//             "ldr": obj.payload.light_sensor_reading,
+//         }
+//     });
+//     save_time_series(payload, mongodb_collection_ldr);
+// }
 
-async function save_humidity_time_series(docList) {
-    const payload = _.map(docList, (obj) => {
-        return {
-            "metadata": { "sensorName": obj.device_name, "place_id": obj.place_id, "type": "humidity" },
-            "timestamp": obj.date,
-            "humidity": obj.payload.humidity_sensor_reading,
-        }
-    });
-    save_time_series(payload, mongodb_collection_ldr);
-}
+
 
 
 async function processIOTFrames(docList) {
@@ -131,11 +135,11 @@ async function processIOTFrames(docList) {
     await save_iot_frame_dumps(docList);
     // save timeseries
     await save_temperature_time_series(docList);
+    await save_humidity_time_series(docList);
     await save_led_status_time_series(docList);
     await save_luminosity_time_series(docList);
     await save_proximity_time_series(docList);
-    await save_ldr_time_series(docList);
-    await save_humidity_time_series(docList);
+    // await save_ldr_time_series(docList);
 }
 
 module.exports = {
@@ -146,12 +150,12 @@ async function run() {
     const db = client.db(mongodb_database);
 
     let collection_arr = [
-        // mongodb_collection_temperature,
-        // mongodb_collection_led_status,
-        // mongodb_collection_luminosity,
-        // mongodb_collection_proximity,
-        // mongodb_collection_ldr,
+        mongodb_collection_temperature,
         mongodb_collection_humidity,
+        mongodb_collection_led_status,
+        mongodb_collection_luminosity,
+        mongodb_collection_proximity,
+        // mongodb_collection_ldr,
     ];
 
     for (let value of collection_arr) {
@@ -166,4 +170,5 @@ async function run() {
     }
 }
 
+// create timeseries databases
 // run().catch((err) => console.log(err));
