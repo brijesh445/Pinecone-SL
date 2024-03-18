@@ -163,7 +163,8 @@ void example_publish(mqtt_client_t *client, void *arg)
     printf("%d\r\n",lig);
     int motion = bl_gpio_input_get_value(PIR);
     int lux = bl_gpio_input_get_value(TSL);
-    sprintf(pub_payload, "{\"device_id\":\"bl602_alpha\",\"device_name\":\"iot_sensor_123\",\"place_id\":\"defaultplace\",\"date\":\"2024-01-22T3:47:42.\",\"timestamp\":\"1234567890\",\"payload\":{\"temperature\":23.45,\"humidity\":32,\"led_status\": %d,\"luminosity\": %d,\"proximity\":%d}}",  lig, lux, motion);
+    int temp = read_dht22_data();
+    sprintf(pub_payload, "{\"device_id\":\"bl602_alpha\",\"device_name\":\"iot_sensor_123\",\"place_id\":\"defaultplace\",\"date\":\"2024-01-22T3:47:42.\",\"timestamp\":\"1234567890\",\"payload\":{\"temperature\":%f,\"humidity\":32,\"led_status\": %d,\"luminosity\": %d,\"proximity\":%d}}",  temp, lig, lux, motion);
   //pub_payload= "";
   err_t err;
   u8_t qos = 2; /* 0 1 or 2, see MQTT specification */
