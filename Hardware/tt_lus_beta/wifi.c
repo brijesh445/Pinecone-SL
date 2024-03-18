@@ -1,3 +1,9 @@
+/*
+This code is referenced from Tobias Tefke's research on the BL602 SDK. For any further clarifications, you may contact the original author.
+Code Author: Tobias Tefke
+E-mail: <t.tefke@stud.fh-sm.de>
+*/
+
 #include <stdio.h>
 
 #include <bl_wifi.h>
