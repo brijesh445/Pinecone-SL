@@ -76,3 +76,7 @@ Communicating to the USB port,
 ```bash
   sudo screen /dev/ttyUSB0 2000000
 ```
+
+## Hardware Connection Diagram
+![IMG_8630](https://github.com/brijesh445/Pinecone-SL/assets/33537397/a36466fd-c638-4016-be34-3f4e4659e818)
+
